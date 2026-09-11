@@ -21,44 +21,50 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SectionIndexer;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
 import com.android.settingslib.applications.ApplicationsState;
 import com.android.settingslib.widget.SettingsBasePreferenceFragment;
+
+import org.lineageos.settings.R;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.lineageos.settings.R;
 
-public class ThermalSettingsFragment
-        extends SettingsBasePreferenceFragment implements ApplicationsState.Callbacks {
+public class ThermalSettingsFragment extends SettingsBasePreferenceFragment
+        implements ApplicationsState.Callbacks {
+
     private AllPackagesAdapter mAllPackagesAdapter;
     private ApplicationsState mApplicationsState;
     private ApplicationsState.Session mSession;
     private ActivityFilter mActivityFilter;
-    private Map<String, ApplicationsState.AppEntry> mEntryMap =
-            new HashMap<String, ApplicationsState.AppEntry>();
 
     private ThermalUtils mThermalUtils;
     private RecyclerView mAppsRecyclerView;
 
     @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {}
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,8 +81,8 @@ public class ThermalSettingsFragment
     }
 
     @Override
-    public View onCreateView(
-            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
         return inflater.inflate(R.layout.thermal_layout, container, false);
     }
 
@@ -92,7 +98,6 @@ public class ThermalSettingsFragment
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().setTitle(getResources().getString(R.string.thermal_title));
         rebuild();
     }
 
@@ -124,32 +129,23 @@ public class ThermalSettingsFragment
     }
 
     @Override
-    public void onAllSizesComputed() {}
+    public void onAllSizesComputed() {
+    }
 
     @Override
-    public void onLauncherInfoChanged() {}
+    public void onLauncherInfoChanged() {
+    }
 
     @Override
-    public void onPackageIconChanged() {}
+    public void onPackageIconChanged() {
+    }
 
     @Override
-    public void onPackageSizeChanged(String packageName) {}
+    public void onPackageSizeChanged(String packageName) {
+    }
 
     @Override
-    public void onRunningStateChanged(boolean running) {}
-
-    @Override
-    public void setDivider(@androidx.annotation.Nullable final Drawable divider) {
-        RecyclerView list = getListView();
-        if (list == null) {
-            View root = getView();
-            if (root != null) {
-                root.post(() -> setDivider(divider));
-            }
-            return;
-        }
-
-        super.setDivider(divider);
+    public void onRunningStateChanged(boolean running) {
     }
 
     private void handleAppEntries(List<ApplicationsState.AppEntry> entries) {
@@ -172,7 +168,8 @@ public class ThermalSettingsFragment
                 sectionIndex = label.substring(0, 1).toUpperCase();
             }
 
-            if (lastSectionIndex == null || !TextUtils.equals(sectionIndex, lastSectionIndex)) {
+            if (lastSectionIndex == null ||
+                    !TextUtils.equals(sectionIndex, lastSectionIndex)) {
                 sections.add(sectionIndex);
                 positions.add(offset);
                 lastSectionIndex = sectionIndex;
@@ -182,10 +179,6 @@ public class ThermalSettingsFragment
         }
 
         mAllPackagesAdapter.setEntries(entries, sections, positions);
-        mEntryMap.clear();
-        for (ApplicationsState.AppEntry e : entries) {
-            mEntryMap.put(e.info.packageName, e);
-        }
     }
 
     private void rebuild() {
@@ -204,12 +197,8 @@ public class ThermalSettingsFragment
                 return R.drawable.ic_thermal_dialer;
             case ThermalUtils.STATE_GAMING:
                 return R.drawable.ic_thermal_gaming;
-            case ThermalUtils.STATE_NAVIGATION:
-                return R.drawable.ic_thermal_navigation;
             case ThermalUtils.STATE_STREAMING:
                 return R.drawable.ic_thermal_streaming;
-            case ThermalUtils.STATE_VIDEO:
-                return R.drawable.ic_thermal_video;
             case ThermalUtils.STATE_DEFAULT:
             default:
                 return R.drawable.ic_thermal_default;
@@ -236,13 +225,21 @@ public class ThermalSettingsFragment
     }
 
     private class ModeAdapter extends BaseAdapter {
-        private final LayoutInflater inflater;
-        private final int[] items = {R.string.thermal_default, R.string.thermal_benchmark,
-                R.string.thermal_browser, R.string.thermal_camera, R.string.thermal_dialer,
-                R.string.thermal_gaming, R.string.thermal_navigation, R.string.thermal_streaming,
-                R.string.thermal_video};
 
-        private ModeAdapter(Context context) { inflater = LayoutInflater.from(context); }
+        private final LayoutInflater inflater;
+        private final int[] items = {
+                R.string.thermal_default,
+                R.string.thermal_benchmark,
+                R.string.thermal_browser,
+                R.string.thermal_camera,
+                R.string.thermal_dialer,
+                R.string.thermal_gaming,
+                R.string.thermal_streaming
+        };
+
+        private ModeAdapter(Context context) {
+            inflater = LayoutInflater.from(context);
+        }
 
         @Override
         public int getCount() {
@@ -265,8 +262,8 @@ public class ThermalSettingsFragment
             if (convertView != null) {
                 view = (TextView) convertView;
             } else {
-                view = (TextView) inflater.inflate(
-                        android.R.layout.simple_spinner_dropdown_item, parent, false);
+                view = (TextView) inflater.inflate(android.R.layout.simple_spinner_dropdown_item,
+                        parent, false);
             }
 
             view.setText(items[position]);
@@ -277,6 +274,7 @@ public class ThermalSettingsFragment
 
     private class AllPackagesAdapter extends RecyclerView.Adapter<ViewHolder>
             implements AdapterView.OnItemSelectedListener, SectionIndexer {
+
         private List<ApplicationsState.AppEntry> mEntries = new ArrayList<>();
         private String[] mSections;
         private int[] mPositions;
@@ -299,7 +297,7 @@ public class ThermalSettingsFragment
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             return new ViewHolder(LayoutInflater.from(parent.getContext())
-                            .inflate(R.layout.thermal_list_item, parent, false));
+                    .inflate(R.layout.thermal_list_item, parent, false));
         }
 
         @Override
@@ -312,21 +310,19 @@ public class ThermalSettingsFragment
 
             holder.mode.setAdapter(new ModeAdapter(context));
             holder.mode.setOnItemSelectedListener(this);
-
             holder.title.setText(entry.label);
             holder.title.setOnClickListener(v -> holder.mode.performClick());
-
             mApplicationsState.ensureIcon(entry);
             holder.icon.setImageDrawable(entry.icon);
-
             int packageState = mThermalUtils.getStateForPackage(entry.info.packageName);
             holder.mode.setSelection(packageState, false);
             holder.mode.setTag(entry);
             holder.stateIcon.setImageResource(getStateDrawable(packageState));
+            holder.stateIcon.setOnClickListener(v -> holder.mode.performClick());
         }
 
-        private void setEntries(List<ApplicationsState.AppEntry> entries, List<String> sections,
-                List<Integer> positions) {
+        private void setEntries(List<ApplicationsState.AppEntry> entries,
+                List<String> sections, List<Integer> positions) {
             mEntries = entries;
             mSections = sections.toArray(new String[sections.size()]);
             mPositions = new int[positions.size()];
@@ -335,6 +331,7 @@ public class ThermalSettingsFragment
             }
             notifyDataSetChanged();
         }
+
 
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -347,7 +344,8 @@ public class ThermalSettingsFragment
         }
 
         @Override
-        public void onNothingSelected(AdapterView<?> parent) {}
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
 
         @Override
         public int getPositionForSection(int section) {
@@ -384,6 +382,7 @@ public class ThermalSettingsFragment
     }
 
     private class ActivityFilter implements ApplicationsState.AppFilter {
+
         private final PackageManager mPackageManager;
         private final List<String> mLauncherResolveInfoList = new ArrayList<String>();
 
@@ -407,7 +406,8 @@ public class ThermalSettingsFragment
         }
 
         @Override
-        public void init() {}
+        public void init() {
+        }
 
         @Override
         public boolean filterApp(ApplicationsState.AppEntry entry) {
@@ -419,5 +419,14 @@ public class ThermalSettingsFragment
             }
             return show;
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            getActivity().onBackPressed();
+            return true;
+        }
+        return false;
     }
 }

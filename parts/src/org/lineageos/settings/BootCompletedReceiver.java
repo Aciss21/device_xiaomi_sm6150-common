@@ -21,22 +21,23 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import org.lineageos.settings.doze.DozeUtils;
+
+import org.lineageos.settings.haptic.HapticUtils;
 import org.lineageos.settings.thermal.ThermalUtils;
+import org.lineageos.settings.refreshrate.RefreshUtils;
+import org.lineageos.settings.doze.DozeUtils;
 
 public class BootCompletedReceiver extends BroadcastReceiver {
+
     private static final boolean DEBUG = false;
     private static final String TAG = "XiaomiParts";
 
     @Override
     public void onReceive(final Context context, Intent intent) {
-        Log.d(TAG, "Received intent: " + intent.getAction());
-        if (!intent.getAction().equals(Intent.ACTION_LOCKED_BOOT_COMPLETED)) {
-            return;
-        }
-
-        Log.i(TAG, "Boot completed, starting services");
+        if (DEBUG) Log.d(TAG, "Received boot completed intent");
+        HapticUtils.restoreLevel(context);
+        ThermalUtils.initialize(context);
+        RefreshUtils.initialize(context);
         DozeUtils.onBootCompleted(context);
-        ThermalUtils.startService(context);
     }
 }
