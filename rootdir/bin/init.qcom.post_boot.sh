@@ -29,6 +29,55 @@
 
 target=`getprop ro.board.platform`
 
+function configure_memory_parameters() {
+    # Set Memory parameters.
+    #
+    # Set per_process_reclaim tuning parameters
+    # All targets will use vmpressure range 50-70,
+    # All targets will use 512 pages swap size.
+    #
+    # Set Low memory killer minfree parameters
+    # 64 bit will use Google default LMK series.
+    #
+    # Set ALMK parameters (usually above the highest minfree values)
+    # vmpressure_file_min threshold is always set slightly higher
+    # than LMK minfree's last bin value for all targets. It is calculated as
+    # vmpressure_file_min = (last bin - second last bin ) + last bin
+
+    # Read adj series and set adj threshold for PPR and ALMK.
+    # This is required since adj values change from framework to framework.
+    adj_series=`cat /sys/module/lowmemorykiller/parameters/adj`
+    adj_1="${adj_series#*,}"
+    set_almk_ppr_adj="${adj_1%%,*}"
+
+    # PPR and ALMK should not act on HOME adj and below.
+    # Normalized ADJ for HOME is 6. Hence multiply by 6
+    # ADJ score represented as INT in LMK params, actual score can be in decimal
+    # Hence add 6 considering a worst case of 0.9 conversion to INT (0.9*6).
+    # For uLMK + Memcg, this will be set as 6 since adj is zero.
+    set_almk_ppr_adj=$(((set_almk_ppr_adj * 6) + 6))
+    echo $set_almk_ppr_adj > /sys/module/lowmemorykiller/parameters/adj_max_shift
+
+    # Calculate vmpressure_file_min as below & set for 64 bit:
+    # vmpressure_file_min = last_lmk_bin + (last_lmk_bin - last_but_one_lmk_bin)
+    minfree_series=`cat /sys/module/lowmemorykiller/parameters/minfree`
+    minfree_1="${minfree_series#*,}" ; rem_minfree_1="${minfree_1%%,*}"
+    minfree_2="${minfree_1#*,}" ; rem_minfree_2="${minfree_2%%,*}"
+    minfree_3="${minfree_2#*,}" ; rem_minfree_3="${minfree_3%%,*}"
+    minfree_4="${minfree_3#*,}" ; rem_minfree_4="${minfree_4%%,*}"
+    minfree_5="${minfree_4#*,}"
+
+    vmpres_file_min=$((minfree_5 + (minfree_5 - rem_minfree_4)))
+    echo $vmpres_file_min > /sys/module/lowmemorykiller/parameters/vmpressure_file_min
+
+    echo "18432,23040,27648,64512,165888,225792" > /sys/module/lowmemorykiller/parameters/minfree
+
+    # Enable adaptive LMK for all targets &
+    # use Google default LMK series for all 64-bit targets >=2GB.
+    echo 1 > /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk
+    echo 1 > /sys/module/lowmemorykiller/parameters/oom_reaper
+}
+
 # Apply settings for sm6150
 # Set the default IRQ affinity to the silver cluster. When a
 # CPU is isolated/hotplugged, the IRQ affinity is adjusted
@@ -45,25 +94,24 @@ case "$soc_id" in
         "355" | "369" | "377" | "380" | "384" )
 
     # Setting b.L scheduler parameters
-    echo 25 > /proc/sys/kernel/sched_downmigrate_boosted
-    echo 25 > /proc/sys/kernel/sched_upmigrate_boosted
-    echo 85 > /proc/sys/kernel/sched_downmigrate
-    echo 95 > /proc/sys/kernel/sched_upmigrate
+    echo 45 > /proc/sys/kernel/sched_downmigrate_boosted
+    echo 45 > /proc/sys/kernel/sched_upmigrate_boosted
+    echo 65 > /proc/sys/kernel/sched_downmigrate
+    echo 85 > /proc/sys/kernel/sched_upmigrate
 
     # configure governor settings for little cluster
-    echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-    echo 500 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-    echo 20000 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
+    echo "reflex" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
     # configure governor settings for big cluster
-    echo "schedutil" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_governor
-    echo 500 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/up_rate_limit_us
-    echo 20000 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/down_rate_limit_us
+    echo "reflex" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_governor
 
     # Configure default schedTune value for foreground/top-app
     echo 1 > /dev/stune/foreground/schedtune.prefer_idle
     echo 10 > /dev/stune/top-app/schedtune.boost
     echo 1 > /dev/stune/top-app/schedtune.prefer_idle
+
+    # Set Memory parameters
+    configure_memory_parameters
 
     # Enable bus-dcvs
     for device in /sys/devices/platform/soc
@@ -143,25 +191,24 @@ case "$soc_id" in
     "365" | "366" )
 
     # Setting b.L scheduler parameters
-    echo 25 > /proc/sys/kernel/sched_downmigrate_boosted
-    echo 25 > /proc/sys/kernel/sched_upmigrate_boosted
-    echo 85 > /proc/sys/kernel/sched_downmigrate
-    echo 95 > /proc/sys/kernel/sched_upmigrate
+    echo 45 > /proc/sys/kernel/sched_downmigrate_boosted
+    echo 45 > /proc/sys/kernel/sched_upmigrate_boosted
+    echo 65 > /proc/sys/kernel/sched_downmigrate
+    echo 85 > /proc/sys/kernel/sched_upmigrate
 
     # configure governor settings for little cluster
-    echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-    echo 500 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
-    echo 20000 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us
+    echo "reflex" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
     # configure governor settings for big cluster
-    echo "schedutil" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_governor
-    echo 500 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/up_rate_limit_us
-    echo 20000 > /sys/devices/system/cpu/cpu6/cpufreq/schedutil/down_rate_limit_us
+    echo "reflex" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_governor
 
     # Configure default schedTune value for foreground/top-app
     echo 1 > /dev/stune/foreground/schedtune.prefer_idle
     echo 10 > /dev/stune/top-app/schedtune.boost
     echo 1 > /dev/stune/top-app/schedtune.prefer_idle
+
+    # Set Memory parameters
+    configure_memory_parameters
 
     # Enable bus-dcvs
     for device in /sys/devices/platform/soc
@@ -253,54 +300,6 @@ case "$soc_id" in
     echo 0 > /sys/module/lpm_levels/parameters/sleep_disabled
     ;;
 esac
-
-function configure_zram_parameters() {
-    MemTotalStr=`cat /proc/meminfo | grep MemTotal`
-    MemTotal=${MemTotalStr:16:8}
-
-    let RamSizeGB="( $MemTotal / 1048576 ) + 1"
-    let zRamSizeMB="( $RamSizeGB * 1024 ) / 2"
-    diskSizeUnit=M
-
-    # use MB avoid 32 bit overflow
-    if [ $zRamSizeMB -gt 4096 ]; then
-        let zRamSizeMB=4096
-    fi
-
-    echo lz4 > /sys/block/zram0/comp_algorithm
-
-    if [ -f /sys/block/zram0/disksize ]; then
-        if [ -f /sys/block/zram0/use_dedup ]; then
-            echo 1 > /sys/block/zram0/use_dedup
-        fi
-        if [ $MemTotal -le 524288 ]; then
-           echo 402653184 > /sys/block/zram0/disksize
-        elif [ $MemTotal -le 1048576 ]; then
-            echo 805306368 > /sys/block/zram0/disksize
-        else
-            zramDiskSize=$zRamSizeMB$diskSizeUnit
-            echo $zramDiskSize > /sys/block/zram0/disksize
-        fi
-
-        # ZRAM may use more memory than it saves if SLAB_STORE_USER
-        # debug option is enabled.
-        if [ -e /sys/kernel/slab/zs_handle ]; then
-            echo 0 > /sys/kernel/slab/zs_handle/store_user
-        fi
-        if [ -e /sys/kernel/slab/zspage ]; then
-            echo 0 > /sys/kernel/slab/zspage/store_user
-        fi
-
-        mkswap /dev/block/zram0
-        swapon /dev/block/zram0 -p 32758
-    fi
-}
-
-# Enable ZRAM
-configure_zram_parameters
-echo 0 > /proc/sys/vm/page-cluster
-echo 0 > /sys/module/vmpressure/parameters/allocstall_threshold
-echo 100 > /proc/sys/vm/swappiness
 
 # Enable PowerHAL hint processing
 setprop vendor.powerhal.init 1

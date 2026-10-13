@@ -31,7 +31,7 @@
 firmware_directories /vendor/firmware_mnt/image/
 
 # The DIAG device node is not world writable/readable.
-/dev/diag                 0666   system     oem_2901
+/dev/diag                 0660   system     oem_2901
 
 /dev/wlan                 0660   wifi       wifi
 /dev/kgsl-3d0             0666   system     system
@@ -184,4 +184,4 @@ firmware_directories /vendor/firmware_mnt/image/
 /sys/devices/soc0        serial_number   0000    root      root
 
 # Charger
-/sys/class/power_supply/battery input_suspend   0660    system  system
+/sys/class/power_supply/battery charging_enabled   0660    system  system
