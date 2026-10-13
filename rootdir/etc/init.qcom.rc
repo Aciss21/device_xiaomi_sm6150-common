@@ -84,6 +84,10 @@ on boot
 
     chown bluetooth net_bt /sys/class/rfkill/rfkill0/device/extldo
     chmod 0660 /sys/class/rfkill/rfkill0/device/extldo
+    
+    # Allow system to adjust haptic level directly
+    chown system system /sys/devices/platform/soc/a8c000.i2c/i2c-2/2-005a/ulevel
+    chmod 0664 /sys/devices/platform/soc/a8c000.i2c/i2c-2/2-005a/ulevel
 
     chown system system /sys/kernel/boot_slpi/ssr
 
