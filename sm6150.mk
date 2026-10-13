@@ -262,10 +262,10 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     init.qcom.rc \
-    init.qcom.recovery.rc \
+    init.recovery.qcom.rc \
     init.qcom.usb.rc \
     init.target.rc \
-    ueventd.qcom.rc
+    ueventd.rc
 
 # Sensors
 PRODUCT_COPY_FILES += \

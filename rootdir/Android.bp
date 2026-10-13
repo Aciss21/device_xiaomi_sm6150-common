@@ -60,8 +60,8 @@ prebuilt_etc {
 }
 
 prebuilt_etc {
-    name: "init.qcom.recovery.rc",
-    src: "etc/init.qcom.recovery.rc",
+    name: "init.recovery.qcom.rc",
+    src: "etc/init.recovery.qcom.rc",
     sub_dir: "init",
     recovery: true,
 }
@@ -74,8 +74,7 @@ prebuilt_etc {
 }
 
 prebuilt_etc {
-    name: "ueventd.qcom.rc",
-    filename: "ueventd.rc",
-    src: "etc/ueventd.qcom.rc",
+    name: "ueventd.rc",
+    src: "etc/ueventd.rc",
     vendor: true,
 }
