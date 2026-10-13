@@ -213,6 +213,10 @@ PRODUCT_COPY_FILES += \
 # Kernel
 PRODUCT_SET_DEBUGFS_RESTRICTIONS := true
 
+# Launcher
+PRODUCT_PACKAGES += \
+    NexusLauncherOverlay
+
 # Lineage Health
 PRODUCT_PACKAGES += \
     vendor.lineage.health-service.default
